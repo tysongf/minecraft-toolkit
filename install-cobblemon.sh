@@ -19,20 +19,20 @@ echo ""
 # Install Minecraft Launcher on Linux
 if [[ "$OS" == "Linux" ]]; then
     echo "=== Installing Minecraft Launcher ==="
-    
+
     # Check if launcher is already installed
     if command -v minecraft-launcher &> /dev/null; then
         echo "Minecraft Launcher is already installed!"
     else
         echo "Downloading Minecraft Launcher..."
         wget https://launcher.mojang.com/download/Minecraft.deb -O /tmp/Minecraft.deb
-        
+
         echo "Installing Minecraft Launcher (requires sudo)..."
         sudo dpkg -i /tmp/Minecraft.deb
-        
+
         echo "Fixing dependencies..."
         sudo apt-get install -f -y
-        
+
         rm /tmp/Minecraft.deb
         echo "Minecraft Launcher installed successfully!"
     fi
@@ -64,7 +64,7 @@ echo "Downloading Fabric API..."
 wget https://cdn.modrinth.com/data/P7dR8mSH/versions/m6zu1K31/fabric-api-0.116.7%2B1.21.1.jar -O fabric-api.jar
 
 echo "Downloading Cobblemon..."
-wget https://cdn.modrinth.com/data/MdwFAVRL/versions/cSelWkDu/Cobblemon-fabric-1.7.1%2B1.21.1.jar -O cobblemon.jar
+wget https://cdn.modrinth.com/data/MdwFAVRL/versions/s64m1opn/Cobblemon-fabric-1.7.1%2B1.21.1.jar -O cobblemon.jar
 
 echo "Downloading Glitchcore..."
 wget https://cdn.modrinth.com/data/s3dmwKy5/versions/lbSHOhee/GlitchCore-fabric-1.21.1-2.1.0.0.jar -O glitchcore.jar
@@ -80,10 +80,10 @@ echo ""
 echo "=== Downloading Optional Performance Mods ==="
 
 echo "Downloading Sodium (performance)..."
-wget https://cdn.modrinth.com/data/AANobbMI/versions/4OZL6q6h/sodium-fabric-0.6.8%2Bmc1.21.1.jar -O sodium.jar
+wget https://cdn.modrinth.com/data/AANobbMI/versions/u1OEbNKx/sodium-fabric-0.6.13%2Bmc1.21.1.jar -O sodium.jar
 
 echo "Downloading Mod Menu..."
-wget https://cdn.modrinth.com/data/mOgUt4GM/versions/qc95ajME/modmenu-11.0.3.jar -O modmenu.jar
+wget https://cdn.modrinth.com/data/mOgUt4GM/versions/YIfqIJ8q/modmenu-11.0.3.jar -O modmenu.jar
 
 echo ""
 echo "=== Installation Complete! ==="
