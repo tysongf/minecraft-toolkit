@@ -89,8 +89,8 @@ Write-Host ""
 Write-Host "=== Downloading Optional Performance Mods ===" -ForegroundColor Cyan
 
 $optionalMods = @{
-    "sodium.jar" = "https://cdn.modrinth.com/data/AANobbMI/versions/4OZL6q6h/sodium-fabric-0.6.8%2Bmc1.21.1.jar"
-    "modmenu.jar" = "https://cdn.modrinth.com/data/mOgUt4GM/versions/qc95ajME/modmenu-11.0.3.jar"
+    "sodium.jar" = "https://cdn.modrinth.com/data/AANobbMI/versions/u1OEbNKx/sodium-fabric-0.6.13%2Bmc1.21.1.jar"
+    "modmenu.jar" = "https://cdn.modrinth.com/data/mOgUt4GM/versions/YIfqIJ8q/modmenu-11.0.3.jar"
 }
 
 foreach ($mod in $optionalMods.GetEnumerator()) {
