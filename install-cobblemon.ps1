@@ -4,6 +4,63 @@
 Write-Host "=== Minecraft 1.21.1 Client + Mods Installer ===" -ForegroundColor Cyan
 Write-Host ""
 
+# Check for Java 21
+Write-Host "=== Checking Java Installation ===" -ForegroundColor Cyan
+$javaInstalled = $false
+try {
+    $javaVersion = & java -version 2>&1 | Select-String "version" | ForEach-Object { $_ -replace '.*version "([^"]*)".*', '$1' }
+    if ($javaVersion -match "^21\.") {
+        Write-Host "Java 21 is already installed: $javaVersion" -ForegroundColor Green
+        $javaInstalled = $true
+    } else {
+        Write-Host "Java found but not version 21: $javaVersion" -ForegroundColor Yellow
+    }
+} catch {
+    Write-Host "Java not found" -ForegroundColor Yellow
+}
+
+if (-not $javaInstalled) {
+    Write-Host ""
+    Write-Host "=== Installing Adoptium Java 21 ===" -ForegroundColor Cyan
+    
+    $javaInstallerUrl = "https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.5%2B11/OpenJDK21U-jdk_x64_windows_hotspot_21.0.5_11.msi"
+    $javaInstallerPath = "$env:TEMP\adoptium-jdk-21.msi"
+    
+    try {
+        Write-Host "Downloading Java 21 installer..." -ForegroundColor Yellow
+        Invoke-WebRequest -Uri $javaInstallerUrl -OutFile $javaInstallerPath
+        
+        Write-Host "Installing Java 21 (this may take a minute)..." -ForegroundColor Yellow
+        Write-Host "Please follow the installer prompts if any appear..." -ForegroundColor Yellow
+        Start-Process msiexec.exe -ArgumentList "/i `"$javaInstallerPath`" /quiet /norestart ADDLOCAL=FeatureMain,FeatureEnvironment,FeatureJarFileRunWith,FeatureJavaHome" -Wait
+        
+        Remove-Item $javaInstallerPath
+        
+        # Refresh environment variables
+        $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
+        
+        Write-Host "Java 21 installed successfully!" -ForegroundColor Green
+        
+        # Verify installation
+        try {
+            $javaVersion = & java -version 2>&1 | Select-String "version"
+            Write-Host "Verified: $javaVersion" -ForegroundColor Green
+        } catch {
+            Write-Host "Java installed but not yet in PATH. You may need to restart PowerShell." -ForegroundColor Yellow
+        }
+    } catch {
+        Write-Host "Error installing Java: $_" -ForegroundColor Red
+        Write-Host "Please download and install Java 21 manually from:" -ForegroundColor Yellow
+        Write-Host "https://adoptium.net/temurin/releases/?version=21" -ForegroundColor Yellow
+        Write-Host ""
+        Write-Host "Press any key to exit..."
+        $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
+        exit 1
+    }
+}
+
+Write-Host ""
+
 # Set Minecraft directory
 $MINECRAFT_DIR = "$env:APPDATA\.minecraft"
 Write-Host "Minecraft directory: $MINECRAFT_DIR" -ForegroundColor Green
@@ -30,6 +87,9 @@ try {
     Remove-Item $fabricInstallerPath
 } catch {
     Write-Host "Error downloading or installing Fabric: $_" -ForegroundColor Red
+    Write-Host ""
+    Write-Host "Press any key to exit..."
+    $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
     exit 1
 }
 
