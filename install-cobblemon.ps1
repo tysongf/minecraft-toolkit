@@ -14,49 +14,19 @@ try {
         $javaInstalled = $true
     } else {
         Write-Host "Java found but not version 21: $javaVersion" -ForegroundColor Yellow
+        Write-Host "Please install Java 21 from: https://adoptium.net/temurin/releases/?version=21" -ForegroundColor Yellow
     }
 } catch {
-    Write-Host "Java not found" -ForegroundColor Yellow
-}
-
-if (-not $javaInstalled) {
+    Write-Host "Java 21 not found!" -ForegroundColor Red
     Write-Host ""
-    Write-Host "=== Installing Adoptium Java 21 ===" -ForegroundColor Cyan
-    
-    $javaInstallerUrl = "https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.5%2B11/OpenJDK21U-jdk_x64_windows_hotspot_21.0.5_11.msi"
-    $javaInstallerPath = "$env:TEMP\adoptium-jdk-21.msi"
-    
-    try {
-        Write-Host "Downloading Java 21 installer..." -ForegroundColor Yellow
-        Invoke-WebRequest -Uri $javaInstallerUrl -OutFile $javaInstallerPath
-        
-        Write-Host "Installing Java 21 (this may take a minute)..." -ForegroundColor Yellow
-        Write-Host "Please follow the installer prompts if any appear..." -ForegroundColor Yellow
-        Start-Process msiexec.exe -ArgumentList "/i `"$javaInstallerPath`" /quiet /norestart ADDLOCAL=FeatureMain,FeatureEnvironment,FeatureJarFileRunWith,FeatureJavaHome" -Wait
-        
-        Remove-Item $javaInstallerPath
-        
-        # Refresh environment variables
-        $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
-        
-        Write-Host "Java 21 installed successfully!" -ForegroundColor Green
-        
-        # Verify installation
-        try {
-            $javaVersion = & java -version 2>&1 | Select-String "version"
-            Write-Host "Verified: $javaVersion" -ForegroundColor Green
-        } catch {
-            Write-Host "Java installed but not yet in PATH. You may need to restart PowerShell." -ForegroundColor Yellow
-        }
-    } catch {
-        Write-Host "Error installing Java: $_" -ForegroundColor Red
-        Write-Host "Please download and install Java 21 manually from:" -ForegroundColor Yellow
-        Write-Host "https://adoptium.net/temurin/releases/?version=21" -ForegroundColor Yellow
-        Write-Host ""
-        Write-Host "Press any key to exit..."
-        $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
-        exit 1
-    }
+    Write-Host "Please install Java 21 from:" -ForegroundColor Yellow
+    Write-Host "https://adoptium.net/temurin/releases/?version=21" -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "After installing Java, restart PowerShell and run this script again." -ForegroundColor Yellow
+    Write-Host ""
+    Write-Host "Press any key to exit..."
+    $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
+    exit 1
 }
 
 Write-Host ""
