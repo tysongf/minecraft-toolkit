@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Minecraft Fabric + Cobblemon Server Setup Script
-# For Oracle Linux
+# For Oracle Linux ARM64
 
 echo "=== Minecraft Fabric + Cobblemon Server Setup ==="
 echo ""
@@ -10,13 +10,13 @@ echo ""
 echo "Updating system..."
 sudo dnf update -y
 
-# Install Adoptium Java 21
-echo "Installing Adoptium Java 21..."
-wget https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.5%2B11/OpenJDK21U-jdk_x64_linux_hotspot_21.0.5_11.tar.gz
+# Install Adoptium Java 21 (ARM64)
+echo "Installing Adoptium Java 21 for ARM64..."
+wget https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.5%2B11/OpenJDK21U-jdk_aarch64_linux_hotspot_21.0.5_11.tar.gz
 sudo mkdir -p /opt/java
-sudo tar -xzf OpenJDK21U-jdk_x64_linux_hotspot_21.0.5_11.tar.gz -C /opt/java
+sudo tar -xzf OpenJDK21U-jdk_aarch64_linux_hotspot_21.0.5_11.tar.gz -C /opt/java
 sudo ln -sf /opt/java/jdk-21.0.5+11/bin/java /usr/bin/java
-rm OpenJDK21U-jdk_x64_linux_hotspot_21.0.5_11.tar.gz
+rm OpenJDK21U-jdk_aarch64_linux_hotspot_21.0.5_11.tar.gz
 
 # Verify Java installation
 java -version
@@ -28,19 +28,10 @@ cd ~/mc-cobblemon
 
 # Download Fabric server installer
 echo "Downloading Fabric server installer..."
-# Using Minecraft 1.21.1 and latest Fabric loader 0.18.3
+# Using Minecraft 1.21.1 and Fabric loader 0.18.3
 MINECRAFT_VERSION="1.21.1"
 curl -OJ https://meta.fabricmc.net/v2/versions/loader/${MINECRAFT_VERSION}/0.18.3/1.1.0/server/jar
 mv fabric-server-mc.*.jar fabric-server-launch.jar
-
-# Create server startup script
-echo "Creating server startup script..."
-cat > start.sh << 'EOF'
-#!/bin/bash
-java -Xmx8G -Xms8G -jar fabric-server-launch.jar nogui
-EOF
-
-chmod +x start.sh
 
 # Accept EULA
 echo "Accepting Minecraft EULA..."
@@ -52,11 +43,13 @@ server-port=25565
 gamemode=survival
 difficulty=easy
 max-players=12
-motd=A Minecraft Server with Cobblemon
+motd=Cobblemon + Biomes Aplenty
 white-list=false
-spawn-protection=16
+spawn-protection=0
 view-distance=10
+simulation-distance=10
 online-mode=true
+allow-flight=true
 EOF
 
 # Create mods directory
@@ -64,13 +57,11 @@ mkdir -p mods
 
 # Download Fabric API (required for most mods)
 echo "Downloading Fabric API..."
-# Fabric API for 1.21.1
 wget https://cdn.modrinth.com/data/P7dR8mSH/versions/m6zu1K31/fabric-api-0.116.7%2B1.21.1.jar -O mods/fabric-api.jar
 
 # Download Cobblemon
 echo "Downloading Cobblemon..."
-# Cobblemon 1.7.1 for 1.21.1
-wget https://cdn.modrinth.com/data/MdwFAVRL/versions/s64m1opn/Cobblemon-fabric-1.7.1%2B1.21.1.jar -O mods/cobblemon.jar
+wget https://cdn.modrinth.com/data/MdwFAVRL/versions/cSelWkDu/Cobblemon-fabric-1.7.1%2B1.21.1.jar -O mods/cobblemon.jar
 
 # Download performance mods
 echo "Downloading Lithium (performance)..."
@@ -108,7 +99,7 @@ After=network.target
 Type=simple
 User=$USER
 WorkingDirectory=$HOME/mc-cobblemon
-ExecStart=$HOME/mc-cobblemon/start.sh
+ExecStart=/usr/bin/java -Xmx8G -Xms8G -jar $HOME/mc-cobblemon/fabric-server-launch.jar nogui
 Restart=on-failure
 RestartSec=10
 
@@ -124,19 +115,18 @@ echo "=== Setup Complete! ==="
 echo ""
 echo "Server location: ~/mc-cobblemon"
 echo ""
-echo "To start the server manually:"
-echo "  cd ~/mc-cobblemon"
-echo "  ./start.sh"
-echo ""
-echo "To enable auto-start on boot:"
-echo "  sudo systemctl enable minecraft"
-echo "  sudo systemctl start minecraft"
+echo "To enable and start the server:"
+echo "  sudo systemctl enable cobblemon"
+echo "  sudo systemctl start cobblemon"
 echo ""
 echo "To check server status:"
-echo "  sudo systemctl status minecraft"
+echo "  sudo systemctl status cobblemon"
 echo ""
 echo "To view server logs:"
-echo "  sudo journalctl -u minecraft -f"
+echo "  sudo journalctl -u cobblemon -f"
+echo ""
+echo "To stop the server:"
+echo "  sudo systemctl stop cobblemon"
 echo ""
 echo "Don't forget to configure Oracle Cloud security list to allow port 25565!"
 echo "Go to: Networking -> Virtual Cloud Networks -> Your VCN -> Security Lists"

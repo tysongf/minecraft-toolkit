@@ -61,11 +61,7 @@ Open port 25565 in your Oracle Cloud VCN:
 
 ### 4. Start Server
 ```bash
-# Manual start
-cd ~/mc-cobblemon
-./start.sh
-
-# Or enable as service (auto-start on boot)
+# Enable service (auto-start on boot)
 sudo systemctl enable cobblemon
 sudo systemctl start cobblemon
 
@@ -129,11 +125,6 @@ bash install-cobblemon.sh
 sudo systemctl start cobblemon
 sudo systemctl stop cobblemon
 sudo systemctl restart cobblemon
-
-# Manual
-cd ~/mc-cobblemon
-./start.sh
-# Press Ctrl+C to stop
 ```
 
 ### View Logs
@@ -179,9 +170,8 @@ sudo journalctl -u cobblemon -n 50
 # Check Java version
 java -version  # Should be 21
 
-# Check permissions
-ls -l ~/mc-cobblemon/start.sh  # Should be executable
-chmod +x ~/mc-cobblemon/start.sh
+# Verify systemd service
+sudo systemctl status cobblemon
 ```
 
 ### Can't connect to server
@@ -202,10 +192,16 @@ wget [mod-download-url]
 ```
 
 ### Out of memory
-Edit RAM allocation in `~/mc-cobblemon/start.sh`:
+Edit the systemd service to change RAM allocation:
 ```bash
-# Change -Xmx8G and -Xms8G to different values
-java -Xmx4G -Xms4G -jar fabric-server-launch.jar nogui
+sudo nano /etc/systemd/system/cobblemon.service
+
+# Change -Xmx8G and -Xms8G to different values in the ExecStart line
+# For example: ExecStart=/usr/bin/java -Xmx4G -Xms4G -jar ...
+
+# Reload and restart
+sudo systemctl daemon-reload
+sudo systemctl restart cobblemon
 ```
 
 ## 📝 File Locations
@@ -215,7 +211,6 @@ java -Xmx4G -Xms4G -jar fabric-server-launch.jar nogui
 - Mods: `~/mc-cobblemon/mods/`
 - World data: `~/mc-cobblemon/world/`
 - Config: `~/mc-cobblemon/server.properties`
-- Startup script: `~/mc-cobblemon/start.sh`
 - Systemd service: `/etc/systemd/system/cobblemon.service`
 
 ### Client
@@ -244,3 +239,10 @@ MIT License - feel free to use and modify these scripts.
 - Client script auto-installs launcher on Debian/Ubuntu only
 - Server requires 8GB+ RAM for smooth performance
 - Always backup your world data before updates!
+
+### Version Compatibility
+**IMPORTANT:** Clients must use Minecraft 1.21.1 to connect to this server.
+- The latest Minecraft version is 1.21.11 (as of December 2024)
+- This server uses 1.21.1 because Cobblemon doesn't support 1.21.11 yet
+- When launching Minecraft, select the **fabric-loader-1.21.1** profile, NOT "Latest release"
+- Version mismatch will result in "Incompatible client" or "Network protocol error"
