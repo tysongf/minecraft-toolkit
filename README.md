@@ -2,6 +2,26 @@
 
 Automated installation scripts for setting up a Minecraft 1.21.1 Fabric server with Cobblemon and client installation.
 
+## 📑 Table of Contents
+
+- [What This Does](#-what-this-does)
+- [Prerequisites](#-prerequisites)
+  - [Server Requirements](#server-requirements)
+  - [Client Requirements](#client-requirements)
+- [Server Installation](#-server-installation)
+- [Client Installation](#-client-installation)
+  - [Windows](#windows)
+  - [Linux (Debian/Ubuntu)](#linux-debianubuntu)
+  - [macOS](#macos)
+  - [Connect to Server](#connect-to-server)
+- [Installed Mods](#-installed-mods)
+- [Server Management](#-server-management)
+- [Troubleshooting](#-troubleshooting)
+- [File Locations](#-file-locations)
+- [Contributing](#-contributing)
+- [Links](#-links)
+- [Notes](#%EF%B8%8F-notes)
+
 ## 🎮 What This Does
 
 These scripts automate the entire setup process for running a Cobblemon Minecraft server and getting clients connected.
@@ -74,6 +94,40 @@ sudo journalctl -u cobblemon -f
 
 ## 💻 Client Installation
 
+### Windows
+
+**Prerequisites:**
+- Windows 10 or 11
+- PowerShell (pre-installed on Windows)
+- Valid Minecraft account
+
+**Step 1: Download the script**
+Download `install-cobblemon-client.ps1` from the repository.
+
+**Step 2: Unblock the script**
+Right-click the downloaded `.ps1` file → **Properties** → Check **Unblock** → Click **OK**
+
+**Step 3: Set execution policy (one-time setup)**
+Open PowerShell as Administrator and run:
+```powershell
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+```
+Type `Y` and press Enter to confirm.
+
+**Step 4: Run the installer**
+Right-click `install-cobblemon-client.ps1` → **Run with PowerShell**
+
+OR open PowerShell in the download folder and run:
+```powershell
+.\install-cobblemon-client.ps1
+```
+
+The script will automatically:
+- Install Java 21 (if not already installed)
+- Install Minecraft Launcher (download manually if needed)
+- Install Fabric 1.21.1
+- Download all required mods
+
 ### Linux (Debian/Ubuntu)
 ```bash
 chmod +x install-cobblemon.sh
@@ -85,12 +139,24 @@ The script will automatically:
 - Install Fabric 1.21.1
 - Download all required mods
 
-### macOS/Windows
+### macOS
+
+**Prerequisites:**
+- macOS 10.14 or later
+- Java 21 installed ([Download here](https://adoptium.net/temurin/releases/?version=21))
+- Valid Minecraft account
+
+**Installation:**
 1. Download Minecraft Launcher from https://minecraft.net
-2. Run the script (macOS: Terminal, Windows: Git Bash/WSL):
+2. Download `install-cobblemon.sh` from the repository
+3. Open Terminal and navigate to the download folder:
 ```bash
-bash install-cobblemon.sh
+cd ~/Downloads
+chmod +x install-cobblemon.sh
+./install-cobblemon.sh
 ```
+
+The script will automatically install Fabric 1.21.1 and download all required mods.
 
 ### Connect to Server
 1. Launch Minecraft Launcher
