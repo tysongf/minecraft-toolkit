@@ -3,6 +3,42 @@
 # Minecraft Fabric + Cobblemon Server Setup Script
 # For Oracle Linux ARM64
 
+# Server configuration
+MINECRAFT_VERSION="1.21.1"
+FABRIC_LOADER="0.18.3"
+SERVER_PORT="25565"
+MAX_PLAYERS="12"
+RAM_ALLOCATION="8G"
+SERVER_MOTD="Cobblemon + Biomes O' Plenty"
+
+# Server mod URLs dictionary
+declare -A SERVER_MODS=(
+    # Dependencies
+    ["fabric-api"]="https://cdn.modrinth.com/data/P7dR8mSH/versions/m6zu1K31/fabric-api-0.116.7%2B1.21.1.jar"
+    ["glitchcore"]="https://cdn.modrinth.com/data/s3dmwKy5/versions/lbSHOhee/GlitchCore-fabric-1.21.1-2.1.0.0.jar"
+    ["architectury"]="https://cdn.modrinth.com/data/lhGA9TYQ/versions/Wto0RchG/architectury-13.0.8-fabric.jar"
+    ["terrablender"]="https://cdn.modrinth.com/data/kkmrDlKT/versions/XNtIBXyQ/TerraBlender-fabric-1.21.1-4.1.0.8.jar"
+    ["patchouli"]="https://cdn.modrinth.com/data/nU0bVIaL/versions/sAUHGZXc/Patchouli-1.21.1-92-FABRIC.jar"
+    ["almanac"]="https://cdn.modrinth.com/data/Gi02250Z/versions/PntWxGkY/Almanac-1.21.1-2-fabric-1.5.0.jar"
+
+    # Gameplay mods
+    ["cobblemon"]="https://cdn.modrinth.com/data/MdwFAVRL/versions/cSelWkDu/Cobblemon-fabric-1.7.1%2B1.21.1.jar"
+    ["biomesoplenty"]="https://cdn.modrinth.com/data/HXF82T3G/versions/YPm4arUa/BiomesOPlenty-fabric-1.21.1-21.1.0.13.jar"
+    ["cobblemon-additions"]="https://cdn.modrinth.com/data/W2pr9jyL/versions/degN5DK4/cobblemon-additions-4.1.6.jar"
+    ["cobblemon-fightorflight"]="https://cdn.modrinth.com/data/cTdIg5HZ/versions/dqn9P04w/fightorflight-fabric-0.10.3.jar"
+    ["cobblepedia"]="https://cdn.modrinth.com/data/2obPz7jf/versions/4wBW6vUa/Cobblepedia-Fabric-0.7.1.jar"
+
+    # Utility mods
+    ["essential-commands"]="https://cdn.modrinth.com/data/6VdDUivB/versions/kev3hDqV/essential_commands-0.35.2-mc1.21.jar"
+    ["luckperms"]="https://cdn.modrinth.com/data/Vebnzrzj/versions/l47d4ZWk/LuckPerms-Fabric-5.4.140.jar"
+
+    # Performance mods
+    ["lithium"]="https://cdn.modrinth.com/data/gvQqBUqZ/versions/E5eJVp4O/lithium-fabric-0.15.1%2Bmc1.21.1.jar"
+    ["ferritecore"]="https://cdn.modrinth.com/data/uXXizFIs/versions/bwKMSBhn/ferritecore-7.0.2-hotfix-fabric.jar"
+    ["krypton"]="https://cdn.modrinth.com/data/fQEb0iXm/versions/Acz3ttTp/krypton-0.2.8.jar"
+    ["let-me-despawn"]="https://cdn.modrinth.com/data/vE2FN5qn/versions/Wb7jqi55/letmedespawn-1.21.x-fabric-1.5.0.jar"
+)
+
 echo "=== Minecraft Fabric + Cobblemon Server Setup ==="
 echo ""
 
@@ -28,9 +64,7 @@ cd ~/mc-cobblemon
 
 # Download Fabric server installer
 echo "Downloading Fabric server installer..."
-# Using Minecraft 1.21.1 and Fabric loader 0.18.3
-MINECRAFT_VERSION="1.21.1"
-curl -OJ https://meta.fabricmc.net/v2/versions/loader/${MINECRAFT_VERSION}/0.18.3/1.1.0/server/jar
+curl -OJ https://meta.fabricmc.net/v2/versions/loader/${MINECRAFT_VERSION}/${FABRIC_LOADER}/1.1.0/server/jar
 mv fabric-server-mc.*.jar fabric-server-launch.jar
 
 # Accept EULA
@@ -38,12 +72,12 @@ echo "Accepting Minecraft EULA..."
 echo "eula=true" > eula.txt
 
 # Create server.properties with basic settings
-cat > server.properties << 'EOF'
-server-port=25565
-gamemode=survival
+cat > server.properties << EOF
+server-port=${SERVER_PORT}
+gamemode=survivalnsdnf,asdf
 difficulty=easy
-max-players=12
-motd=Cobblemon + Biomes Aplenty
+max-players=${MAX_PLAYERS}
+motd=${SERVER_MOTD}
 white-list=false
 spawn-protection=0
 view-distance=10
@@ -55,37 +89,22 @@ EOF
 # Create mods directory
 mkdir -p mods
 
-# Download Fabric API (required for most mods)
-echo "Downloading Fabric API..."
-wget https://cdn.modrinth.com/data/P7dR8mSH/versions/m6zu1K31/fabric-api-0.116.7%2B1.21.1.jar -O mods/fabric-api.jar
+# Download mods
+echo ""
+echo "=== Downloading Mods ==="
+cd mods
 
-# Download Cobblemon
-echo "Downloading Cobblemon..."
-wget https://cdn.modrinth.com/data/MdwFAVRL/versions/cSelWkDu/Cobblemon-fabric-1.7.1%2B1.21.1.jar -O mods/cobblemon.jar
+for mod_name in "${!SERVER_MODS[@]}"; do
+    echo "Downloading ${mod_name}..."
+    wget "${SERVER_MODS[$mod_name]}" -O "${mod_name}.jar"
+done
 
-# Download performance mods
-echo "Downloading Lithium (performance)..."
-wget https://cdn.modrinth.com/data/gvQqBUqZ/versions/E5eJVp4O/lithium-fabric-0.15.1%2Bmc1.21.1.jar -O mods/lithium.jar
-
-echo "Downloading FerriteCore (memory optimization)..."
-wget https://cdn.modrinth.com/data/uXXizFIs/versions/bwKMSBhn/ferritecore-7.0.2-hotfix-fabric.jar -O mods/ferritecore.jar
-
-echo "Downloading Krypton (network optimization)..."
-wget https://cdn.modrinth.com/data/fQEb0iXm/versions/Acz3ttTp/krypton-0.2.8.jar -O mods/krypton.jar
-
-# Download biome mods and dependencies
-echo "Downloading Glitchcore (dependency)..."
-wget https://cdn.modrinth.com/data/s3dmwKy5/versions/lbSHOhee/GlitchCore-fabric-1.21.1-2.1.0.0.jar -O mods/glitchcore.jar
-
-echo "Downloading TerraBlender (biome library)..."
-wget https://cdn.modrinth.com/data/kkmrDlKT/versions/XNtIBXyQ/TerraBlender-fabric-1.21.1-4.1.0.8.jar -O mods/terrablender.jar
-
-echo "Downloading Biomes O' Plenty..."
-wget https://cdn.modrinth.com/data/HXF82T3G/versions/YPm4arUa/BiomesOPlenty-fabric-1.21.1-21.1.0.13.jar -O mods/biomesoplenty.jar
+cd ~/mc-cobblemon
 
 # Open firewall for Minecraft port
-echo "Opening firewall port 25565..."
-sudo firewall-cmd --permanent --add-port=25565/tcp
+echo ""
+echo "Opening firewall port ${SERVER_PORT}..."
+sudo firewall-cmd --permanent --add-port=${SERVER_PORT}/tcp
 sudo firewall-cmd --reload
 
 # Create systemd service for auto-start
@@ -99,7 +118,7 @@ After=network.target
 Type=simple
 User=$USER
 WorkingDirectory=$HOME/mc-cobblemon
-ExecStart=/usr/bin/java -Xmx8G -Xms8G -jar $HOME/mc-cobblemon/fabric-server-launch.jar nogui
+ExecStart=/usr/bin/java -Xmx${RAM_ALLOCATION} -Xms${RAM_ALLOCATION} -jar $HOME/mc-cobblemon/fabric-server-launch.jar nogui
 Restart=on-failure
 RestartSec=10
 
@@ -114,6 +133,11 @@ echo ""
 echo "=== Setup Complete! ==="
 echo ""
 echo "Server location: ~/mc-cobblemon"
+echo "Installed mods:"
+echo "  - Fabric API, Cobblemon, Biomes O' Plenty"
+echo "  - Cobblemon Additions, Fight or Flight, Cobblepedia, Almanac"
+echo "  - Essential Commands, LuckPerms"
+echo "  - Performance: Lithium, FerriteCore, Krypton, Let Me Despawn"
 echo ""
 echo "To enable and start the server:"
 echo "  sudo systemctl enable cobblemon"
@@ -128,6 +152,5 @@ echo ""
 echo "To stop the server:"
 echo "  sudo systemctl stop cobblemon"
 echo ""
-echo "Don't forget to configure Oracle Cloud security list to allow port 25565!"
-echo "Go to: Networking -> Virtual Cloud Networks -> Your VCN -> Security Lists"
-echo "Add Ingress Rule: Source CIDR: 0.0.0.0/0, Destination Port: 25565, Protocol: TCP"
+echo "Don't forget to allow TCP port ${SERVER_PORT} through your firewall!"
+echo ""

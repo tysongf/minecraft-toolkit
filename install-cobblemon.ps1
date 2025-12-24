@@ -1,7 +1,17 @@
-# Minecraft 1.21.1 Client + Mods Installer for Windows
-# PowerShell Script
+# Core mods
+$mods = @{
+    "fabric-api.jar" = "https://cdn.modrinth.com/data/P7dR8mSH/versions/m6zu1K31/fabric-api-0.116.7%2B1.21.1.jar"
+    "cobblemon.jar" = "https://cdn.modrinth.com/data/MdwFAVRL/versions/cSelWkDu/Cobblemon-fabric-1.7.1%2B1.21.1.jar"
+    "glitchcore.jar" = "https://cdn.modrinth.com/data/s3dmwKy5/versions/lbSHOhee/GlitchCore-fabric-1.21.1-2.1.0.0.jar"
+    "terrablender.jar" = "https://cdn.modrinth.com/data/kkmrDlKT/versions/XNtIBXyQ/TerraBlender-fabric-1.21.1-4.1.0.8.jar"
+    "biomesoplenty.jar" = "https://cdn.modrinth.com/data/HXF82T3G/versions/YPm4arUa/BiomesOPlenty-fabric-1.21.1-21.1.0.13.jar"
+    "architectury.jar" = "https://cdn.modrinth.com/data/lhGA9TYQ/versions/ApsT9KZh/architectury-13.0.6-fabric.jar"
+    "cobblemon-additions.jar" = "https://cdn.modrinth.com/data/qbeBoSYR/versions/vALAbbJ5/cobblemon-additions-1.0.0%2B1.21.1-fabric.jar"
+    "cobblemon-fightorflight.jar" = "https://cdn.modrinth.com/data/W3s9g7No/versions/AdjsGC9u/cobblemon-fightorflight-1.1.0%2B1.21-fabric.jar"
+    "almanac.jar" = "https://cdn.modrinth.com/data/A6zlgwC5/versions/K7VXrP13/almanac-fabric-1.21.1-1.0.0.jar"
+}
 
-Write-Host "=== Minecraft 1.21.1 Client + Mods Installer ===" -ForegroundColor Cyan
+Write-Host "=== Minecraft + Cobblemon + Fight or Flight + Biomes O' Plenty ===" -ForegroundColor Cyan
 Write-Host ""
 
 # Check for Java 21
@@ -63,37 +73,11 @@ try {
     exit 1
 }
 
-# Download required mods
+# Download core mods
 Write-Host ""
-Write-Host "=== Downloading Required Mods ===" -ForegroundColor Cyan
-
-$mods = @{
-    "fabric-api.jar" = "https://cdn.modrinth.com/data/P7dR8mSH/versions/m6zu1K31/fabric-api-0.116.7%2B1.21.1.jar"
-    "cobblemon.jar" = "https://cdn.modrinth.com/data/MdwFAVRL/versions/s64m1opn/Cobblemon-fabric-1.7.1%2B1.21.1.jar"
-    "glitchcore.jar" = "https://cdn.modrinth.com/data/s3dmwKy5/versions/lbSHOhee/GlitchCore-fabric-1.21.1-2.1.0.0.jar"
-    "terrablender.jar" = "https://cdn.modrinth.com/data/kkmrDlKT/versions/XNtIBXyQ/TerraBlender-fabric-1.21.1-4.1.0.8.jar"
-    "biomesoplenty.jar" = "https://cdn.modrinth.com/data/HXF82T3G/versions/YPm4arUa/BiomesOPlenty-fabric-1.21.1-21.1.0.13.jar"
-}
+Write-Host "=== Downloading Core Mods ===" -ForegroundColor Cyan
 
 foreach ($mod in $mods.GetEnumerator()) {
-    Write-Host "Downloading $($mod.Key)..." -ForegroundColor Yellow
-    try {
-        Invoke-WebRequest -Uri $mod.Value -OutFile "$MINECRAFT_DIR\mods\$($mod.Key)"
-    } catch {
-        Write-Host "Error downloading $($mod.Key): $_" -ForegroundColor Red
-    }
-}
-
-# Optional performance mods
-Write-Host ""
-Write-Host "=== Downloading Optional Performance Mods ===" -ForegroundColor Cyan
-
-$optionalMods = @{
-    "sodium.jar" = "https://cdn.modrinth.com/data/AANobbMI/versions/u1OEbNKx/sodium-fabric-0.6.13%2Bmc1.21.1.jar"
-    "modmenu.jar" = "https://cdn.modrinth.com/data/mOgUt4GM/versions/YIfqIJ8q/modmenu-11.0.3.jar"
-}
-
-foreach ($mod in $optionalMods.GetEnumerator()) {
     Write-Host "Downloading $($mod.Key)..." -ForegroundColor Yellow
     try {
         Invoke-WebRequest -Uri $mod.Value -OutFile "$MINECRAFT_DIR\mods\$($mod.Key)"
@@ -109,17 +93,6 @@ Write-Host "Installed mods in: $MINECRAFT_DIR\mods" -ForegroundColor Green
 Write-Host ""
 Write-Host "Installed mods:" -ForegroundColor Yellow
 Get-ChildItem "$MINECRAFT_DIR\mods" | Format-Table Name, Length -AutoSize
-Write-Host ""
-Write-Host "Next steps:" -ForegroundColor Cyan
-Write-Host "1. Launch Minecraft Launcher"
-Write-Host "2. Select 'fabric-loader-1.21.1' from the dropdown"
-Write-Host "3. Click Play"
-Write-Host "4. Go to Multiplayer -> Add Server"
-Write-Host "5. Server Address: mc1.bitbot.ca"
-Write-Host "6. Have fun!"
-Write-Host ""
-Write-Host "Note: If you don't have the Minecraft launcher installed, download it from:" -ForegroundColor Yellow
-Write-Host "https://www.minecraft.net/en-us/download"
 Write-Host ""
 Write-Host "Press any key to exit..."
 $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
