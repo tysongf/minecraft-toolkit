@@ -1,17 +1,29 @@
-# Core mods
+# Minecraft 1.21.1 Client + Mods Installer for Windows
+# PowerShell Script
+
 $mods = @{
+    # Dependencies
     "fabric-api.jar" = "https://cdn.modrinth.com/data/P7dR8mSH/versions/m6zu1K31/fabric-api-0.116.7%2B1.21.1.jar"
-    "cobblemon.jar" = "https://cdn.modrinth.com/data/MdwFAVRL/versions/cSelWkDu/Cobblemon-fabric-1.7.1%2B1.21.1.jar"
     "glitchcore.jar" = "https://cdn.modrinth.com/data/s3dmwKy5/versions/lbSHOhee/GlitchCore-fabric-1.21.1-2.1.0.0.jar"
+    "architectury.jar" = "https://cdn.modrinth.com/data/lhGA9TYQ/versions/Wto0RchG/architectury-13.0.8-fabric.jar"
     "terrablender.jar" = "https://cdn.modrinth.com/data/kkmrDlKT/versions/XNtIBXyQ/TerraBlender-fabric-1.21.1-4.1.0.8.jar"
+    "almanac.jar" = "https://cdn.modrinth.com/data/Gi02250Z/versions/PntWxGkY/Almanac-1.21.1-2-fabric-1.5.0.jar"
+    
+    # Gameplay mods
+    "cobblemon.jar" = "https://cdn.modrinth.com/data/MdwFAVRL/versions/cSelWkDu/Cobblemon-fabric-1.7.1%2B1.21.1.jar"
     "biomesoplenty.jar" = "https://cdn.modrinth.com/data/HXF82T3G/versions/YPm4arUa/BiomesOPlenty-fabric-1.21.1-21.1.0.13.jar"
-    "architectury.jar" = "https://cdn.modrinth.com/data/lhGA9TYQ/versions/ApsT9KZh/architectury-13.0.6-fabric.jar"
-    "cobblemon-additions.jar" = "https://cdn.modrinth.com/data/qbeBoSYR/versions/vALAbbJ5/cobblemon-additions-1.0.0%2B1.21.1-fabric.jar"
-    "cobblemon-fightorflight.jar" = "https://cdn.modrinth.com/data/W3s9g7No/versions/AdjsGC9u/cobblemon-fightorflight-1.1.0%2B1.21-fabric.jar"
-    "almanac.jar" = "https://cdn.modrinth.com/data/A6zlgwC5/versions/K7VXrP13/almanac-fabric-1.21.1-1.0.0.jar"
+    "cobblemon-additions.jar" = "https://cdn.modrinth.com/data/W2pr9jyL/versions/degN5DK4/cobblemon-additions-4.1.6.jar"
+    "cobblemon-fightorflight.jar" = "https://cdn.modrinth.com/data/cTdIg5HZ/versions/dqn9P04w/fightorflight-fabric-0.10.3.jar"
+    
+    # Performance mods
+    "sodium.jar" = "https://cdn.modrinth.com/data/AANobbMI/versions/u1OEbNKx/sodium-fabric-0.6.13%2Bmc1.21.1.jar"
+    "lithium.jar" = "https://cdn.modrinth.com/data/gvQqBUqZ/versions/E5eJVp4O/lithium-fabric-0.15.1%2Bmc1.21.1.jar"
+    "ferritecore.jar" = "https://cdn.modrinth.com/data/uXXizFIs/versions/bwKMSBhn/ferritecore-7.0.2-hotfix-fabric.jar"
+    "krypton.jar" = "https://cdn.modrinth.com/data/fQEb0iXm/versions/Acz3ttTp/krypton-0.2.8.jar"
+    "modmenu.jar" = "https://cdn.modrinth.com/data/mOgUt4GM/versions/YIfqIJ8q/modmenu-11.0.3.jar"
 }
 
-Write-Host "=== Minecraft + Cobblemon + Fight or Flight + Biomes O' Plenty ===" -ForegroundColor Cyan
+Write-Host "=== Minecraft 1.21.1 Client + Mods Installer ===" -ForegroundColor Cyan
 Write-Host ""
 
 # Check for Java 21
@@ -73,9 +85,9 @@ try {
     exit 1
 }
 
-# Download core mods
+# Download mods
 Write-Host ""
-Write-Host "=== Downloading Core Mods ===" -ForegroundColor Cyan
+Write-Host "=== Downloading Mods ===" -ForegroundColor Cyan
 
 foreach ($mod in $mods.GetEnumerator()) {
     Write-Host "Downloading $($mod.Key)..." -ForegroundColor Yellow
