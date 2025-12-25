@@ -1,12 +1,19 @@
 #!/bin/bash
+set -Eeuo pipefail
+IFS=$'\n\t'
+
+trap 'echo "❌ Error on line $LINENO. Exiting."; exit 1' ERR
 
 # Minecraft Fabric + Cobblemon Server Setup Script
-# For Oracle Linux ARM64 - Idempotent version
+# Oracle Linux ARM64 – Hardened & Idempotent
 
 echo "=== Minecraft Fabric + Cobblemon Server Setup ==="
 echo ""
 
-# Ask for server configuration
+#################################
+# User Configuration
+#################################
+
 read -p "Enter server installation directory [default: $HOME/mc-cobblemon]: " SERVER_DIR
 SERVER_DIR="${SERVER_DIR:-$HOME/mc-cobblemon}"
 echo "Server will be installed to: ${SERVER_DIR}"
@@ -32,13 +39,21 @@ SERVER_MOTD="${SERVER_MOTD:-Cobblemon + Biomes O Plenty}"
 echo "Server MOTD set to: ${SERVER_MOTD}"
 echo ""
 
-# Fixed configuration
+#################################
+# Fixed Versions
+#################################
+
 MINECRAFT_VERSION="1.21.1"
 FABRIC_LOADER="0.18.3"
 
-# Server mod URLs dictionary
+#################################
+# Mods
+#################################
+
 declare -A SERVER_MODS=(
     ["fabric-api"]="https://cdn.modrinth.com/data/P7dR8mSH/versions/m6zu1K31/fabric-api-0.116.7%2B1.21.1.jar"
+    ["forge-api"]="https://cdn.modrinth.com/data/ohNO6lps/versions/N5qzq0XV/ForgeConfigAPIPort-v21.1.6-1.21.1-Fabric.jar"
+    ["opac"]="https://cdn.modrinth.com/data/gF3BGWvG/versions/uUz4cbjU/open-parties-and-claims-fabric-1.21.1-0.25.8.jar"
     ["glitchcore"]="https://cdn.modrinth.com/data/s3dmwKy5/versions/lbSHOhee/GlitchCore-fabric-1.21.1-2.1.0.0.jar"
     ["architectury"]="https://cdn.modrinth.com/data/lhGA9TYQ/versions/Wto0RchG/architectury-13.0.8-fabric.jar"
     ["terrablender"]="https://cdn.modrinth.com/data/kkmrDlKT/versions/XNtIBXyQ/TerraBlender-fabric-1.21.1-4.1.0.8.jar"
@@ -55,274 +70,129 @@ declare -A SERVER_MODS=(
     ["let-me-despawn"]="https://cdn.modrinth.com/data/vE2FN5qn/versions/Wb7jqi55/letmedespawn-1.21.x-fabric-1.5.0.jar"
 )
 
-# Update system
+#################################
+# System Prep
+#################################
+
 echo "Updating system..."
 sudo dnf update -y
 
-# Check for Java 21
-echo ""
-echo "=== Checking Java Installation ==="
-JAVA_INSTALLED=false
-JAVA_CORRECT_VERSION=false
+#################################
+# Java 21 Check
+#################################
 
-if command -v java &> /dev/null; then
-    JAVA_INSTALLED=true
-    JAVA_VERSION=$(java -version 2>&1 | head -n 1 | cut -d'"' -f2 | cut -d'.' -f1)
-    if [ "$JAVA_VERSION" = "21" ]; then
-        JAVA_CORRECT_VERSION=true
-        echo "Java 21 is already installed!"
-    else
-        echo "Java $JAVA_VERSION is installed, but Java 21 is required."
-    fi
-else
-    echo "Java is not installed."
+JAVA_OK=false
+if command -v java &>/dev/null; then
+    JAVA_VER=$(java -version 2>&1 | awk -F\" 'NR==1{print $2}' | cut -d. -f1)
+    [[ "$JAVA_VER" == "21" ]] && JAVA_OK=true
 fi
 
-# Ask to install Java if needed
-if [ "$JAVA_CORRECT_VERSION" = false ]; then
-    echo ""
-    read -p "Would you like to install Java 21 from Adoptium? (y/n) [default: y]: " INSTALL_JAVA
-    INSTALL_JAVA="${INSTALL_JAVA:-y}"
-    
+if [[ "$JAVA_OK" == false ]]; then
+    read -p "Install Java 21 (Adoptium)? [Y/n]: " INSTALL_JAVA
+    INSTALL_JAVA="${INSTALL_JAVA:-Y}"
+
     if [[ "$INSTALL_JAVA" =~ ^[Yy]$ ]]; then
-        echo ""
-        echo "=== Installing Adoptium Java 21 for ARM64 ==="
-        
         JAVA_TAR="OpenJDK21U-jdk_aarch64_linux_hotspot_21.0.5_11.tar.gz"
         JAVA_DIR="/opt/java/jdk-21.0.5+11"
-        
-        if [ -d "$JAVA_DIR" ]; then
-            echo "Java 21 directory already exists at $JAVA_DIR"
-        else
-            if [ ! -f "/tmp/$JAVA_TAR" ]; then
-                echo "Downloading Java 21..."
-                wget -P /tmp https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.5%2B11/$JAVA_TAR
-            else
-                echo "Using existing Java tarball from /tmp..."
-            fi
-            
-            echo "Extracting Java 21..."
-            sudo mkdir -p /opt/java
-            sudo tar -xzf /tmp/$JAVA_TAR -C /opt/java
-            rm -f /tmp/$JAVA_TAR
-        fi
-        
-        if [ -L /usr/bin/java ]; then
-            CURRENT_LINK=$(readlink -f /usr/bin/java)
-            if [ "$CURRENT_LINK" != "$JAVA_DIR/bin/java" ]; then
-                echo "Updating Java symlink..."
-                sudo ln -sf $JAVA_DIR/bin/java /usr/bin/java
-            else
-                echo "Java symlink already correctly configured."
-            fi
-        else
-            echo "Creating Java symlink..."
-            sudo ln -sf $JAVA_DIR/bin/java /usr/bin/java
-        fi
-        
-        if command -v java &> /dev/null; then
-            NEW_JAVA_VERSION=$(java -version 2>&1 | head -n 1 | cut -d'"' -f2 | cut -d'.' -f1)
-            if [ "$NEW_JAVA_VERSION" = "21" ]; then
-                echo "Java 21 is available!"
-                JAVA_CORRECT_VERSION=true
-                java -version
-            else
-                echo "Error: Java 21 installation may have failed. Found version $NEW_JAVA_VERSION"
-                exit 1
-            fi
-        else
-            echo "Error: Java installation failed."
-            exit 1
-        fi
+
+        sudo mkdir -p /opt/java
+        wget -q --show-progress -P /tmp \
+          https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.5%2B11/$JAVA_TAR
+
+        sudo tar -xzf /tmp/$JAVA_TAR -C /opt/java
+        sudo ln -sf "$JAVA_DIR/bin/java" /usr/bin/java
+        rm -f /tmp/$JAVA_TAR
     else
-        echo "Java 21 is required to continue. Please install it manually."
+        echo "Java 21 required. Exiting."
         exit 1
     fi
 fi
 
-echo ""
+#################################
+# Server Setup
+#################################
 
-# Create minecraft directory
-echo "Creating minecraft server directory..."
-mkdir -p "${SERVER_DIR}"
-cd "${SERVER_DIR}"
+mkdir -p "$SERVER_DIR"
+cd "$SERVER_DIR"
 
-# Check if Fabric server is already installed
 FABRIC_JAR="fabric-server-launch.jar"
-
-if [ -f "$FABRIC_JAR" ]; then
-    echo "Fabric server jar already exists, skipping download."
-else
-    echo "Downloading Fabric server installer..."
-    curl -OJ https://meta.fabricmc.net/v2/versions/loader/${MINECRAFT_VERSION}/${FABRIC_LOADER}/1.1.0/server/jar
-    mv fabric-server-mc.*.jar $FABRIC_JAR
-    echo "Fabric server installed successfully!"
+if [[ ! -f "$FABRIC_JAR" ]]; then
+    curl -fsSL -o "$FABRIC_JAR" \
+      https://meta.fabricmc.net/v2/versions/loader/${MINECRAFT_VERSION}/${FABRIC_LOADER}/1.1.0/server/jar
 fi
 
-# Accept EULA
-if [ -f eula.txt ] && grep -q "eula=true" eula.txt; then
-    echo "EULA already accepted."
-else
-    echo "Accepting Minecraft EULA..."
-    echo "eula=true" > eula.txt
-fi
+echo "eula=true" > eula.txt
 
-# Create or update server.properties
-if [ -f server.properties ]; then
-    echo "server.properties already exists. Updating configuration..."
-    sed -i "s/^server-port=.*/server-port=${SERVER_PORT}/" server.properties
-    sed -i "s/^max-players=.*/max-players=${MAX_PLAYERS}/" server.properties
-    ESCAPED_MOTD=$(echo "$SERVER_MOTD" | sed 's/[&/\]/\\&/g')
-    sed -i "s/^motd=.*/motd=${ESCAPED_MOTD}/" server.properties
-else
-    echo "Creating server.properties..."
-    cat > server.properties << 'ENDOFFILE'
-server-port=PORTPLACEHOLDER
+#################################
+# server.properties
+#################################
+
+ESCAPED_MOTD=$(printf '%s\n' "$SERVER_MOTD" | sed 's/[&/\\]/\\&/g')
+
+cat > server.properties <<EOF
+server-port=${SERVER_PORT}
 gamemode=survival
-difficulty=easy
-max-players=PLAYERSPLACEHOLDER
-motd=MOTDPLACEHOLDER
+difficulty=normal
+max-players=${MAX_PLAYERS}
+motd=${ESCAPED_MOTD}
 white-list=false
 spawn-protection=0
 view-distance=10
 simulation-distance=10
 online-mode=true
 allow-flight=true
-ENDOFFILE
-    sed -i "s/PORTPLACEHOLDER/${SERVER_PORT}/" server.properties
-    sed -i "s/PLAYERSPLACEHOLDER/${MAX_PLAYERS}/" server.properties
-    ESCAPED_MOTD=$(echo "$SERVER_MOTD" | sed 's/[&/\]/\\&/g')
-    sed -i "s/MOTDPLACEHOLDER/${ESCAPED_MOTD}/" server.properties
-fi
+EOF
 
-# Create mods directory
+#################################
+# Mods
+#################################
+
 mkdir -p mods
-
-# Download mods
-echo ""
-echo "=== Downloading Mods ==="
 cd mods
 
-for mod_name in "${!SERVER_MODS[@]}"; do
-    MOD_FILE="${mod_name}.jar"
-    
-    if [ -f "$MOD_FILE" ]; then
-        echo "Mod ${mod_name} already exists, skipping download."
-    else
-        echo "Downloading ${mod_name}..."
-        wget "${SERVER_MODS[$mod_name]}" -O "${MOD_FILE}"
-    fi
+for MOD in "${!SERVER_MODS[@]}"; do
+    FILE="${MOD}.jar"
+    [[ -f "$FILE" ]] || wget -q --show-progress "${SERVER_MODS[$MOD]}" -O "$FILE"
 done
 
-cd "${SERVER_DIR}"
+#################################
+# Firewall
+#################################
 
-# Open firewall for Minecraft port
-echo ""
-echo "Configuring firewall for port ${SERVER_PORT}..."
-if sudo firewall-cmd --list-ports | grep -q "${SERVER_PORT}/tcp"; then
-    echo "Port ${SERVER_PORT}/tcp already open in firewall."
-else
-    echo "Opening firewall port ${SERVER_PORT}..."
-    sudo firewall-cmd --permanent --add-port=${SERVER_PORT}/tcp
-    sudo firewall-cmd --reload
-fi
+sudo firewall-cmd --permanent --add-port=${SERVER_PORT}/tcp || true
+sudo firewall-cmd --reload
 
-# Create or update systemd service
+#################################
+# systemd Service
+#################################
+
 SERVICE_FILE="/etc/systemd/system/cobblemon.service"
-SERVICE_CHANGED=false
 
-if [ -f "$SERVICE_FILE" ]; then
-    echo "Systemd service already exists. Checking if update is needed..."
-    
-    TEMP_SERVICE=$(mktemp)
-    cat > "$TEMP_SERVICE" << 'ENDSERVICE'
+sudo tee "$SERVICE_FILE" >/dev/null <<EOF
 [Unit]
 Description=Minecraft Cobblemon Server
 After=network.target
 
 [Service]
-Type=simple
-User=USERPLACEHOLDER
-WorkingDirectory=DIRPLACEHOLDER
-ExecStart=/usr/bin/java -XmxRAMPLACEHOLDER -XmsRAMPLACEHOLDER -jar DIRPLACEHOLDER/fabric-server-launch.jar nogui
+User=${USER}
+WorkingDirectory=${SERVER_DIR}
+ExecStart=/usr/bin/java -Xms${RAM_ALLOCATION} -Xmx${RAM_ALLOCATION} -jar ${SERVER_DIR}/fabric-server-launch.jar nogui
 Restart=on-failure
 RestartSec=10
 
 [Install]
 WantedBy=multi-user.target
-ENDSERVICE
-    sed -i "s|USERPLACEHOLDER|${USER}|g" "$TEMP_SERVICE"
-    sed -i "s|DIRPLACEHOLDER|${SERVER_DIR}|g" "$TEMP_SERVICE"
-    sed -i "s|RAMPLACEHOLDER|${RAM_ALLOCATION}|g" "$TEMP_SERVICE"
-    
-    if ! diff -w "$SERVICE_FILE" "$TEMP_SERVICE" > /dev/null 2>&1; then
-        echo "Service configuration changed. Updating..."
-        sudo cp "$TEMP_SERVICE" "$SERVICE_FILE"
-        SERVICE_CHANGED=true
-    else
-        echo "Service configuration unchanged."
-    fi
-    
-    rm -f "$TEMP_SERVICE"
-else
-    echo "Creating systemd service..."
-    TEMP_SERVICE=$(mktemp)
-    cat > "$TEMP_SERVICE" << 'ENDSERVICE'
-[Unit]
-Description=Minecraft Cobblemon Server
-After=network.target
+EOF
 
-[Service]
-Type=simple
-User=USERPLACEHOLDER
-WorkingDirectory=DIRPLACEHOLDER
-ExecStart=/usr/bin/java -XmxRAMPLACEHOLDER -XmsRAMPLACEHOLDER -jar DIRPLACEHOLDER/fabric-server-launch.jar nogui
-Restart=on-failure
-RestartSec=10
+sudo systemctl daemon-reload
 
-[Install]
-WantedBy=multi-user.target
-ENDSERVICE
-    sed -i "s|USERPLACEHOLDER|${USER}|g" "$TEMP_SERVICE"
-    sed -i "s|DIRPLACEHOLDER|${SERVER_DIR}|g" "$TEMP_SERVICE"
-    sed -i "s|RAMPLACEHOLDER|${RAM_ALLOCATION}|g" "$TEMP_SERVICE"
-    sudo cp "$TEMP_SERVICE" "$SERVICE_FILE"
-    rm -f "$TEMP_SERVICE"
-    SERVICE_CHANGED=true
-fi
-
-# Reload systemd if service changed
-if [ "$SERVICE_CHANGED" = true ]; then
-    echo "Reloading systemd daemon..."
-    sudo systemctl daemon-reload
-fi
+#################################
+# Done
+#################################
 
 echo ""
-echo "=== Setup Complete! ==="
-echo ""
-echo "Server location: ${SERVER_DIR}"
-echo "RAM allocation: ${RAM_ALLOCATION}"
-echo "Server port: ${SERVER_PORT}"
-echo "Max players: ${MAX_PLAYERS}"
-echo ""
-echo "Installed mods:"
-echo "  - Fabric API, Cobblemon, Biomes O' Plenty"
-echo "  - Cobblemon Additions, Fight or Flight, Cobblepedia, Almanac"
-echo "  - Essential Commands, LuckPerms"
-echo "  - Performance: Lithium, FerriteCore, Krypton, Let Me Despawn"
-echo ""
-echo "To enable and start the server:"
+echo "✅ Setup Complete"
+echo "Enable server:"
 echo "  sudo systemctl enable cobblemon"
 echo "  sudo systemctl start cobblemon"
-echo ""
-echo "To check server status:"
-echo "  sudo systemctl status cobblemon"
-echo ""
-echo "To view server logs:"
-echo "  sudo journalctl -u cobblemon -f"
-echo ""
-echo "To stop the server:"
-echo "  sudo systemctl stop cobblemon"
-echo ""
-echo "You can run this script again safely - it will skip already installed components."
 echo ""
