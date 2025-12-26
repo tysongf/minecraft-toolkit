@@ -150,7 +150,31 @@ if command -v minecraft-launcher &> /dev/null; then
 else
     echo "Installing required dependencies for Minecraft Launcher..."
     sudo apt-get update
-    sudo apt-get install -y libgdk-pixbuf2.0-0 libgdk-pixbuf-2.0-0
+    sudo apt-get install -y libgdk-pixbuf-2.0-0 libgdk-pixbuf-xlib-2.0-0 equivs
+    
+    # Create a dummy package to satisfy the libgdk-pixbuf2.0-0 dependency
+    echo "Creating compatibility package for libgdk-pixbuf2.0-0..."
+    cat > /tmp/libgdk-pixbuf2.0-0-dummy <<EOF
+Section: misc
+Priority: optional
+Standards-Version: 3.9.2
+
+Package: libgdk-pixbuf2.0-0
+Version: 999.0
+Maintainer: Local User
+Depends: libgdk-pixbuf-2.0-0
+Description: Dummy package to satisfy Minecraft Launcher dependency
+ This is a dummy package that allows the Minecraft Launcher to install
+ on newer Debian/Ubuntu systems where libgdk-pixbuf2.0-0 has been
+ replaced by libgdk-pixbuf-2.0-0.
+EOF
+    
+    cd /tmp
+    equivs-build libgdk-pixbuf2.0-0-dummy
+    sudo dpkg -i libgdk-pixbuf2.0-0_999.0_all.deb
+    rm -f libgdk-pixbuf2.0-0-dummy libgdk-pixbuf2.0-0_999.0_all.deb
+    cd -
+    
     
     echo "Downloading Minecraft Launcher..."
     wget https://launcher.mojang.com/download/Minecraft.deb -O /tmp/Minecraft.deb
