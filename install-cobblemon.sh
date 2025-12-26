@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Minecraft 1.21.1 Client + Mods Installer for Linux
-# Bash Script
+# Bash Script - Fixed GPG key handling
 
 # Mod URLs dictionary
 declare -A MODS=(
@@ -65,8 +65,17 @@ if [ "$need_java_install" -eq 1 ]; then
                 if [ -z "$CODENAME" ]; then
                     CODENAME="$(lsb_release -cs 2>/dev/null || echo buster)"
                 fi
-                wget -qO - https://packages.adoptium.net/artifactory/api/gpg/key/public | sudo apt-key add - >/dev/null 2>&1 || true
-                echo "deb https://packages.adoptium.net/artifactory/deb ${CODENAME} main" | sudo tee /etc/apt/sources.list.d/adoptium.list >/dev/null
+                
+                # Modern GPG key handling for Debian/Ubuntu (not deprecated apt-key)
+                echo "Installing GPG key for Adoptium repository..."
+                sudo mkdir -p /etc/apt/keyrings
+                wget -qO - https://packages.adoptium.net/artifactory/api/gpg/key/public | \
+                    sudo gpg --dearmor -o /etc/apt/keyrings/adoptium.gpg
+                
+                # Create sources list with signed-by directive
+                echo "deb [signed-by=/etc/apt/keyrings/adoptium.gpg] https://packages.adoptium.net/artifactory/deb ${CODENAME} main" | \
+                    sudo tee /etc/apt/sources.list.d/adoptium.list >/dev/null
+                
                 sudo apt-get update
                 sudo apt-get install -y temurin-21-jre
             elif echo "$ID_LIKE_LOWER" | grep -E "rhel|fedora|centos|amzn" >/dev/null 2>&1 || [ -f /etc/redhat-release ]; then
@@ -139,6 +148,10 @@ echo "=== Installing Minecraft Launcher ==="
 if command -v minecraft-launcher &> /dev/null; then
     echo "Minecraft Launcher is already installed!"
 else
+    echo "Installing required dependencies for Minecraft Launcher..."
+    sudo apt-get update
+    sudo apt-get install -y libgdk-pixbuf2.0-0 libgdk-pixbuf-2.0-0
+    
     echo "Downloading Minecraft Launcher..."
     wget https://launcher.mojang.com/download/Minecraft.deb -O /tmp/Minecraft.deb
     
@@ -187,4 +200,9 @@ echo "Installed mods in: ${MINECRAFT_DIR}/mods"
 echo ""
 echo "Installed mods:"
 ls -lh "${MINECRAFT_DIR}/mods"
+echo ""
+echo "To launch Minecraft:"
+echo "1. Open the Minecraft Launcher"
+echo "2. Select the 'fabric-loader-0.18.3-1.21.1' profile"
+echo "3. Click Play!"
 echo ""
