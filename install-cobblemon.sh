@@ -11,13 +11,13 @@ declare -A MODS=(
     ["architectury"]="https://cdn.modrinth.com/data/lhGA9TYQ/versions/Wto0RchG/architectury-13.0.8-fabric.jar"
     ["terrablender"]="https://cdn.modrinth.com/data/kkmrDlKT/versions/XNtIBXyQ/TerraBlender-fabric-1.21.1-4.1.0.8.jar"
     ["almanac"]="https://cdn.modrinth.com/data/Gi02250Z/versions/PntWxGkY/Almanac-1.21.1-2-fabric-1.5.0.jar"
-    
+
     # Gameplay mods
     ["cobblemon"]="https://cdn.modrinth.com/data/MdwFAVRL/versions/s64m1opn/Cobblemon-fabric-1.7.1%2B1.21.1.jar"
     ["biomesoplenty"]="https://cdn.modrinth.com/data/HXF82T3G/versions/YPm4arUa/BiomesOPlenty-fabric-1.21.1-21.1.0.13.jar"
     ["cobblemon-additions"]="https://cdn.modrinth.com/data/W2pr9jyL/versions/degN5DK4/cobblemon-additions-4.1.6.jar"
     ["cobblemon-fightorflight"]="https://cdn.modrinth.com/data/cTdIg5HZ/versions/dqn9P04w/fightorflight-fabric-0.10.3.jar"
-    
+
     # Performance mods
     ["sodium"]="https://cdn.modrinth.com/data/AANobbMI/versions/u1OEbNKx/sodium-fabric-0.6.13%2Bmc1.21.1.jar"
     ["lithium"]="https://cdn.modrinth.com/data/gvQqBUqZ/versions/E5eJVp4O/lithium-fabric-0.15.1%2Bmc1.21.1.jar"
@@ -65,17 +65,17 @@ if [ "$need_java_install" -eq 1 ]; then
                 if [ -z "$CODENAME" ]; then
                     CODENAME="$(lsb_release -cs 2>/dev/null || echo buster)"
                 fi
-                
+
                 # Modern GPG key handling for Debian/Ubuntu (not deprecated apt-key)
                 echo "Installing GPG key for Adoptium repository..."
                 sudo mkdir -p /etc/apt/keyrings
                 wget -qO - https://packages.adoptium.net/artifactory/api/gpg/key/public | \
                     sudo gpg --dearmor -o /etc/apt/keyrings/adoptium.gpg
-                
+
                 # Create sources list with signed-by directive
                 echo "deb [signed-by=/etc/apt/keyrings/adoptium.gpg] https://packages.adoptium.net/artifactory/deb ${CODENAME} main" | \
                     sudo tee /etc/apt/sources.list.d/adoptium.list >/dev/null
-                
+
                 sudo apt-get update
                 sudo apt-get install -y temurin-21-jre
             elif echo "$ID_LIKE_LOWER" | grep -E "rhel|fedora|centos|amzn" >/dev/null 2>&1 || [ -f /etc/redhat-release ]; then
@@ -96,7 +96,7 @@ REPO
                     sudo yum install -y temurin-21-jre
                 fi
             else
-                echo "Distro not detected or not supported for package install; falling back to tarball install into /opt/temurin-21." 
+                echo "Distro not detected or not supported for package install; falling back to tarball install into /opt/temurin-21."
                 TMPDIR=$(mktemp -d)
                 ARCH=$(uname -m)
                 if [ "$ARCH" = "x86_64" ] || [ "$ARCH" = "amd64" ]; then
@@ -151,7 +151,7 @@ else
     echo "Installing required dependencies for Minecraft Launcher..."
     sudo apt-get update
     sudo apt-get install -y libgdk-pixbuf-2.0-0 libgdk-pixbuf-xlib-2.0-0 equivs
-    
+
     # Create a dummy package to satisfy the libgdk-pixbuf2.0-0 dependency
     echo "Creating compatibility package for libgdk-pixbuf2.0-0..."
     cat > /tmp/libgdk-pixbuf2.0-0-dummy <<EOF
@@ -168,23 +168,22 @@ Description: Dummy package to satisfy Minecraft Launcher dependency
  on newer Debian/Ubuntu systems where libgdk-pixbuf2.0-0 has been
  replaced by libgdk-pixbuf-2.0-0.
 EOF
-    
+
     cd /tmp
     equivs-build libgdk-pixbuf2.0-0-dummy
     sudo dpkg -i libgdk-pixbuf2.0-0_999.0_all.deb
     rm -f libgdk-pixbuf2.0-0-dummy libgdk-pixbuf2.0-0_999.0_all.deb
     cd -
-    
-    
+
     echo "Downloading Minecraft Launcher..."
     wget https://launcher.mojang.com/download/Minecraft.deb -O /tmp/Minecraft.deb
-    
+
     echo "Installing Minecraft Launcher (requires sudo)..."
     sudo dpkg -i /tmp/Minecraft.deb
-    
+
     echo "Fixing dependencies..."
     sudo apt-get install -f -y
-    
+
     rm /tmp/Minecraft.deb
     echo "Minecraft Launcher installed successfully!"
 fi
